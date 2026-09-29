@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
 void transform1(unsigned char* data, int length) {
     for (int i = 0; i < length; i += 4) {
         unsigned char r = data[i];

@@ -1,14 +1,7 @@
  
 
-
-
-export function testerFunctions(box,a,b) {
-    box.style.left =  "500px";
-    box.style.top  =  "500px";
-    }
-
-
 export function* dragndrop(box) {
+
     let isKeyDown = false;
     while (true) {
         let evt = yield;

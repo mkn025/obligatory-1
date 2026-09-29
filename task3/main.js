@@ -10,14 +10,16 @@ const worker = new Worker('worker.js');
 const new_worker = new Worker('new_worker.js');
 
 const completedActivities = new Set();
-let pendingHash = null;
-const HASH_MESSAGE = 'maknu0536@uib.no'
+let pendingHash           = null;
+const HASH_MESSAGE        = 'maknu0536@uib.no'
 
 // We'll store the current image's pixel data here once the user uploads an image.
 let imageData;
 
 // When the user selects a file (image), load it and draw it on the canvas.
+
 document.getElementById('upload').addEventListener('change', (e) => {
+
   const file = e.target.files[0];
   if (!file) return; // nothing selected
 
@@ -70,7 +72,8 @@ function applyFilter(type) {
   //
   // The second argument ([copy.buffer]) TRANSFERS the buffer to the worker
   // so it's not copied — it's moved.
-  worker.postMessage({
+  worker.postMessage(
+    {
     type,
     activity: type,
     buffer: copy.buffer,
@@ -116,10 +119,15 @@ function callFourthActivity() {
     .buffer;
 
   new_worker.postMessage({ buffer }, [buffer]);
+
 }
 
+
 function showHashIfReady() {
+
   if (pendingHash === null || completedActivities.size < 4 || !imageData) {
+
+    console.log("wrong hash")
     return;
   }
 
@@ -130,6 +138,9 @@ function showHashIfReady() {
 }
 
 new_worker.onmessage = (e) => {
+
+
+
   if (e.data.error) {
     console.error(e.data.error);
     return;
