@@ -11,7 +11,7 @@ const new_worker = new Worker('new_worker.js');
 
 const completedActivities = new Set();
 let pendingHash = null;
-const HASH_MESSAGE = 'YOUR_STUDENT_ID_HERE' //TODO: REPLACE THIS HASH WITH YOUR STUDENT ID (format: aaa000)
+const HASH_MESSAGE = 'maknu0536@uib.no'
 
 // We'll store the current image's pixel data here once the user uploads an image.
 let imageData;
