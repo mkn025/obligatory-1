@@ -1,0 +1,66 @@
+<html>
+<head>
+<style>
+#myButton {
+position: absolute;
+z-index: 1;
+} 
+    
+
+  #goalZone {
+    position: relative;
+    left: 500px;
+    top: 300px;
+    width: 160px;
+    height: 160px;
+    border: 3px dashed #999;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+ 
+  #goalZone.celebrate {
+    border-color: #2ecc71;
+    color: #2ecc71;
+  }
+
+
+</style>
+</head>
+<body>
+
+<button type="button" id="myButton"> Use mouse to move this button!</button>
+
+
+<div id="goalZone">Drop here!</div>
+
+
+<script type="module">
+
+
+    import {testerFunctions, dragndrop, move, checkGoal } from './dragndrop.js';
+
+    let goal = document.getElementById("goalZone");
+
+
+    // butteon 
+    let box = document.getElementById("myButton");
+
+    window.addEventListener('mouseup', () => checkGoal(box, goal));
+
+    let dd = dragndrop(box);
+
+    dd.next();
+
+    box.onmousedown    = (event) => dd.next(event); 
+    window.onmousemove = (event) => dd.next(event);
+    window.onmouseup   = (event) => dd.next(event);
+
+
+
+</script>
+
+</body>
+</html>
