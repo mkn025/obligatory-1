@@ -1,10 +1,13 @@
+
 export default class DiggablePromise {
   /**
    * @param onDig: Function returning the value the promise should resolve with when ``dig`` is called
    */
   constructor(onDig) {
     let { promise, resolve, reject } = Promise.withResolvers();
+
     [this._promise, this.resolve, this.reject] = [promise, resolve, reject];
+
     if (onDig) {
       this._fetchValue = onDig;
     }
@@ -24,25 +27,40 @@ export default class DiggablePromise {
    * @returns a new promise dependent on the promise ``then``was called on
    */
   then(onFulfilled, onRejected) {
+
     let newPromise = new DiggablePromise();
     newPromise._setSourcePromise(this);
     this._promise.then(
       (x) => {
-        // TODO
+            let fulfilledVal = onFulfilled(x);
         if (fulfilledVal instanceof DiggablePromise) {
-          // TODO
+
+            fulfilledVal._setSourcePromise(this);
+            newPromise._setSourcePromise(fulfilledVal);
+            fulfilledVal.resolve();
+
+            return newPromise;
         }
-        // TODO
-      },
+    },
       (y) => {
         if (onRejected) {
-          // TODO
+
+            let onrejectedVal = onRejected(y);
+            if (onrejectedVal instanceof DiggablePromise) {
+
+                onrejectedVal._setSourcePromise(this);
+                newPromise._setSourcePromise(onrejectedVal);
+
+                onrejectedVal.resolve();
+
+                return newPromise;
+            }
         }
-        // TODO
       }
     );
     return newPromise;
   }
+
 
   // TODO: Complete the implementation of this function.
   /**
@@ -158,7 +176,7 @@ export default class DiggablePromise {
     let promise = new DiggablePromise();
     let rejects = [];
     // TODO
-    promiseList.forEach((p) => 
+    promiseList.forEach((p) => {}
           // TODO
     );
     return promise;
