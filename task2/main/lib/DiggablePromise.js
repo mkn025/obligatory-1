@@ -5,19 +5,17 @@ export default class DiggablePromise {
      */
     constructor(onDig) {
         let { promise, resolve, reject } = Promise.withResolvers();
-
         [this._promise, this.resolve, this.reject] = [promise, resolve, reject];
-
-        if (onDig)
+        if (onDig) {
             this._fetchValue = onDig;
-
+        }
     }
-
     get promise() {
         return this._promise;
     }
 
-    // TODO: Complete the implementation of this function.
+
+
     /**
      * Method to chain a promise with fulfill- and reject-reactions.
      *
@@ -26,50 +24,34 @@ export default class DiggablePromise {
      * @returns a new promise dependent on the promise ``then``was called on
      */
     then(onFulfilled, onRejected) {
-
         let newPromise = new DiggablePromise();
         newPromise._setSourcePromise(this);
-
         this._promise.then(
             (x) => {
 
-                let fulfilledVal = onFulfilled(x);
+                let ffv = onFulfilled ? onFulfilled(x) : x;
 
-                if (fulfilledVal instanceof DiggablePromise) {
-
-                    fulfilledVal._setSourcePromise(this);
-                    newPromise._setSourcePromise(fulfilledVal);
-
-                    fulfilledVal.resolve(x);
-                    newPromise.resolve(fulfilledVal);
-
+                if (ffv instanceof DiggablePromise) {
+                    ffv.then(
+                        (v) => newPromise.resolve(v),
+                        (e) => newPromise.reject(e)
+                    );
                 } else {
-
-                    newPromise.resolve(fulfilledVal);
+                    newPromise.resolve(ffv);
                 }
-
-
             },
             (y) => {
-
                 if (onRejected) {
-                    let onrejectedVal = onRejected(y);
-                    if (onrejectedVal instanceof DiggablePromise) {
+                    let rjv = onRejected(y);
 
-                        onrejectedVal._setSourcePromise(this);
-                        newPromise._setSourcePromise(onrejectedVal);
-
-
-                        onrejectedVal.reject(y);
-                        newPromise.resolve(onrejectedVal);// wtf is this
-                        return;
-
+                    if (rjv instanceof DiggablePromise) {
+                        rjv.then(
+                            (v) => newPromise.resolve(v),
+                            (e) => newPromise.reject(e)
+                        );
                     } else {
-
-                        newPromise.reject(onrejectedVal);
-                        return;
+                        newPromise.resolve(rjv);
                     }
-
                 } else {
                     newPromise.reject(y);
                 }
@@ -78,8 +60,6 @@ export default class DiggablePromise {
         return newPromise;
     }
 
-
-    // TODO: Complete the implementation of this function.
     /**
      * Method used to "catch" an error, normally at the end of a promise chain
      *
@@ -87,11 +67,10 @@ export default class DiggablePromise {
      * @returns a new pending promise
      */
     catch(onRejected) {
+
         return this.then(undefined, onRejected);
     }
 
-
-    // TODO: Complete the implementation of this function.
 
     /**
      * Method to schedule a function to be called when a promise is settled
@@ -100,19 +79,15 @@ export default class DiggablePromise {
      * @returns a new pending promise, to be settled with the same value as the current promise
      */
     finally(onFinally) {
+
         if (typeof onFinally != "function") {
-
             return this.then(onFinally, onFinally);
-
         } else {
-
             return this.then(
                 (value) => DiggablePromise.resolve(onFinally()).then(() => value),
-
                 (reason) =>
                     DiggablePromise.resolve(onFinally()).then(() => {
                         throw reason;
-
                     })
             );
         }
@@ -123,15 +98,13 @@ export default class DiggablePromise {
      * If this._fetchValue is undefined, this function should call itself recursively on all source promises (if there is a source promise). 
      */
     dig() {
-        if (!this._fetchValue) {
-            if (this._sourcePromise)
-                this._sourcePromise.forEach(n => n.dig());
-
+        if (this._fetchValue == undefined) {
+            if (this._sourcePromise) {
+                this._sourcePromise.forEach((p) => p.dig());
+            }
         } else {
             this.resolve(this._fetchValue());
         }
-
-
     }
 
     /**
@@ -157,7 +130,6 @@ export default class DiggablePromise {
     }
 
 
-    // TODO: Complete the implementation of this function.
     /**
      * Method to resolve a promise with the values of several promises once they are resolved.
      *
@@ -167,21 +139,21 @@ export default class DiggablePromise {
     static all(promiseList) {
         let counter = promiseList.length;
         let arr = [];
-
         let promise = new DiggablePromise();
-        promise._setSourcePromise(promiseList);
+        promise._setSourcePromises(promiseList);
 
-
-        // TODO
         for (let i = 0; i < counter; i++) {
-
-            promiseI = promiseList[i];
-            promiseI.then((n) => arr.push(n), (e) => {
-                promiseI.reject(e);
-                promise.reject(promiseI);
-            })
+            promiseList[i].then(
+                (v) => {
+                    arr[i] = v;
+                    counter -= 1;
+                    if (counter == 0) {
+                        promise.resolve(arr);
+                    }
+                },
+                (e) => promise.reject(e)
+            )
         }
-        promise.resolve(promiseList);
         return promise;
     }
 
@@ -204,7 +176,6 @@ export default class DiggablePromise {
     }
 
 
-    // TODO: Complete the implementation of this function.
     /**
      * Method to create a promise fulfilled with the value of the first promise of a list of promises to get resolved.
      *
@@ -213,21 +184,23 @@ export default class DiggablePromise {
      *          using AggregateError
      */
     static any(promiseList) {
-
         let promise = new DiggablePromise();
         let rejects = [];
-        promiseList.forEach((p) => {
+        let counter = promiseList.length;
+        promise._setSourcePromises(promiseList);
+        promiseList.forEach((p, index) =>
+            // TODO
             p.then(
-                (n) => {
-                    promise.resolve(n);
-                    return promise;
+                (v) => promise.resolve(v),
+                (e) => {
+                    rejects[index] = e;
+                    counter -= 1;
+                    if (counter == 0) {
+                        promise.reject(new AggregateError(rejects, "All promises was rejected."));
+                    }
                 }
-            ), (e) => {
-                rejects.push(new AggregateError(e));
-            }
-        }
+            )
         );
-        promise.reject(rejects);
         return promise;
     }
 
@@ -245,7 +218,6 @@ export default class DiggablePromise {
         promise.resolve(value);
         return promise;
     }
-
 
     /**
      * Method to create a new rejected promise.
